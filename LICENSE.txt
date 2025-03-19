@@ -19,3 +19,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+YouTube API Usage Disclaimer
+
+This software uses the YouTube API but is not affiliated with, endorsed by, or officially associated with YouTube or Google. The usage of YouTube data and services through this application must comply with YouTube's Terms of Service and YouTube API Services Terms of Use.
+
+Users are responsible for ensuring their usage of this software complies with YouTube's policies. The developer(s) of this application do not store, redistribute, or modify YouTube content in any way that violates YouTube’s API policies.
+
+By using this software, you agree to adhere to YouTube's Terms of Service: https://www.youtube.com/t/terms and YouTube API Services Terms of Use: https://developers.google.com/youtube/terms/api-services-terms-of-service.
