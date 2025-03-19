@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "Search YouTube Videos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<!-- Search Form -->
+<div class="card p-4 mb-4 shadow-sm theme-card">
+    <h2 class="mb-3">Search YouTube Videos</h2>
+    <form method="get" action="@Url.Action("Index", "Result")" class="row g-3">
+        <div class="col-md-6">
+            <input type="text" name="query" class="form-control theme-input"
+                   placeholder="Enter search keyword..." required
+                   value="@Context.Request.Query["query"]" />
+        </div>
+        <div class="col-md-3">
+            <select name="uploadDate" class="form-select theme-select">
+                <option value="">Any time</option>
+                <option value="today">Today</option>
+                <option value="this_week">This Week</option>
+                <option value="this_month">This Month</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="videoDuration" class="form-select theme-select">
+                <option value="">Any duration</option>
+                <option value="short">Short (&lt; 4 min)</option>
+                <option value="medium">Medium (4-20 min)</option>
+                <option value="long">Long (&gt; 20 min)</option>
+            </select>
+        </div>
+        <div class="col-12 text-center">
+            <button type="submit" class="btn theme-button px-4">
+                <i class="bi bi-search-heart me-2"></i> Search
+            </button>
+        </div>
+
+    </form>
+</div>

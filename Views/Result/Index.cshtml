@@ -1,0 +1,232 @@
+﻿@model YouBrowse.Models.YouTubeSearchResult
+
+@{
+    ViewData["Title"] = "Search Results";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> @ViewBag.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container mt-4">
+    <!-- Search Form -->
+    <div class="card p-4 mb-4 shadow-sm theme-card">
+        <h2 class="mb-3">Search YouTube Videos</h2>
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="query" class="form-control theme-input" placeholder="Enter search keyword..." required />
+            </div>
+            <div class="col-md-3">
+                <select name="uploadDate" class="form-select theme-select">
+                    <option value="">Any time</option>
+                    <option value="today">Today</option>
+                    <option value="this_week">This Week</option>
+                    <option value="this_month">This Month</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="videoDuration" class="form-select theme-select">
+                    <option value="">Any duration</option>
+                    <option value="short">Short (&lt; 4 min)</option>
+                    <option value="medium">Medium (4-20 min)</option>
+                    <option value="long">Long (&gt; 20 min)</option>
+                </select>
+            </div>
+            <div class="col-12 text-center">
+                <button type="submit" class="btn theme-button px-4">
+                    <i class="bi bi-search-heart me-2"></i> Search
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    @if (Model.Videos != null && Model.Videos.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var video in Model.Videos)
+            {
+                <div class="col">
+                    <div class="card video-card h-100 border-1 shadow-sm">
+                        <div class="position-relative">
+                            <img src="@video.ThumbnailUrl" class="card-img-top rounded" alt="Thumbnail">
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title fw-bold">@Html.Raw(video.Title)</h6>
+                            <p class="text-muted mb-0"><i class="bi bi-person-circle"></i> @video.ChannelName</p>
+                            <p class="text-muted mb-3"><i class="bi bi-calendar"></i> @video.PublishedAt</p>
+                            <button class="btn btn-danger w-100 mt-auto watch-btn"
+                                    data-bs-toggle="modal" data-bs-target="#videoModal"
+                                    data-video-id="@video.VideoId">
+                                <i class="bi bi-play-fill"></i> Watch
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content border-0 bg-transparent">
+                    <div class="modal-body p-3 position-relative d-flex align-items-center justify-content-center">
+
+                        <!-- Previous Button -->
+                        <button id="prevVideo" class="btn video-nav-btn position-absolute start-0">
+                            <span class="fs-1">&lt;</span>
+                        </button>
+
+                        <!-- Video Player -->
+                        <div class="ratio ratio-16x9 w-100">
+                            <iframe id="videoFrame" class="w-100 h-100" frameborder="0" allowfullscreen></iframe>
+                        </div>
+
+                        <!-- Next Button -->
+                        <button id="nextVideo" class="btn video-nav-btn position-absolute end-0">
+                            <span class="fs-1">&gt;</span>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                @if (!string.IsNullOrEmpty(Model.PrevPageToken))
+                {
+                    <li class="page-item">
+                        <form method="get" class="d-inline">
+                            <input type="hidden" name="query" value="@ViewContext.HttpContext.Request.Query["query"]" />
+                            <input type="hidden" name="uploadDate" value="@ViewContext.HttpContext.Request.Query["uploadDate"]" />
+                            <input type="hidden" name="videoDuration" value="@ViewContext.HttpContext.Request.Query["videoDuration"]" />
+                            <input type="hidden" name="pageToken" value="@Model.PrevPageToken" />
+                            <button type="submit" class="page-link w-auto px-4">Previous</button>
+                        </form>
+                    </li>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.NextPageToken))
+                {
+                    <li class="page-item">
+                        <form method="get" class="d-inline">
+                            <input type="hidden" name="query" value="@ViewContext.HttpContext.Request.Query["query"]" />
+                            <input type="hidden" name="uploadDate" value="@ViewContext.HttpContext.Request.Query["uploadDate"]" />
+                            <input type="hidden" name="videoDuration" value="@ViewContext.HttpContext.Request.Query["videoDuration"]" />
+                            <input type="hidden" name="pageToken" value="@Model.NextPageToken" />
+                            <button type="submit" class="page-link w-auto px-4">Next</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        </nav>
+
+
+    }
+    else
+    {
+        <p class="text-center text-muted">No results found. Try another search.</p>
+    }
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const videoModal = document.getElementById("videoModal");
+        const videoFrame = document.getElementById("videoFrame");
+        const prevButton = document.getElementById("prevVideo");
+        const nextButton = document.getElementById("nextVideo");
+
+        let videoIds = []; // Store video IDs
+        let currentIndex = 0; // Track currently playing video
+
+        // Open modal and set video
+        videoModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            const videoId = button.getAttribute("data-video-id");
+
+            // Get all video IDs from the page
+            videoIds = [...document.querySelectorAll("[data-video-id]")].map(btn => btn.getAttribute("data-video-id"));
+            currentIndex = videoIds.indexOf(videoId);
+
+            // Set the video in iframe
+            videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+
+            updateNavButtons(); // Enable/Disable Next/Prev buttons
+        });
+
+        // Stop video when modal closes
+        videoModal.addEventListener("hidden.bs.modal", function () {
+            videoFrame.src = "";
+        });
+
+        // Function to switch video
+        function switchVideo(indexChange) {
+            currentIndex += indexChange;
+            if (currentIndex >= 0 && currentIndex < videoIds.length) {
+                videoFrame.src = `https://www.youtube.com/embed/${videoIds[currentIndex]}?autoplay=1`;
+                updateNavButtons();
+            }
+        }
+
+        // Update button states
+        function updateNavButtons() {
+            prevButton.disabled = currentIndex <= 0;
+            nextButton.disabled = currentIndex >= videoIds.length - 1;
+        }
+
+        // Event listeners for Next and Previous buttons
+        prevButton.addEventListener("click", function () {
+            switchVideo(-1);
+        });
+
+        nextButton.addEventListener("click", function () {
+            switchVideo(1);
+        });
+    });
+</script>
+<style>
+    /* Default (Light Mode) */
+    .video-nav-btn {
+        height: 95%;
+        width: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
+        color: white;
+        border: thin;
+        transition: all 0.3s ease-in-out;
+        margin: -4rem -4rem;
+    }
+
+    .video-nav-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
+        border: solid;
+    }
+
+    /* Dark Mode */
+    .dark-mode .video-nav-btn {
+        background-color: rgba(255, 255, 255, 0.6); /* Inverted: Semi-transparent white */
+        color: black; /* Inverted: Black text */
+    }
+
+        .dark-mode .video-nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2); /* Inverted hover effect */
+            color: #fff; /* Black text */
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3); /* Dark glow effect */
+        }
+
+    #videoModal {
+        background-color: rgba(0, 0, 0, 0.9) !important; /* Dark background */
+    }
+</style>
+
